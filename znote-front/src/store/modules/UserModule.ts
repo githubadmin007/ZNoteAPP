@@ -10,7 +10,6 @@ import { Location } from 'vue-router'
     name: 'User', namespaced: true, dynamic: true, store
 })
 export default class UserStore extends VuexModule {
-    AutoLogin = false; // 是否自动登录
     UserId = '';
     UserName = '';
     LoginName = '';
@@ -44,22 +43,6 @@ export default class UserStore extends VuexModule {
         this.UserName = userInfo.user_name;
         this.LoginName = userInfo.login_name;
         this.PasswordMD5 = userInfo.password;
-    }
-    /** 将autologin保存到state中，并管理cookie中的账号密码信息
-     * @param autologin 是否自动登陆
-     */
-    @Mutation
-    SetAutoLogin(autologin: boolean) {
-        this.AutoLogin = autologin;
-        Vue.$cookies.set('AutoLogin', autologin);
-        if (autologin) {
-            Vue.$cookies.set('LoginName', this.LoginName);
-            Vue.$cookies.set('PasswordMD5', this.PasswordMD5);
-        }
-        else {
-            Vue.$cookies.remove('LoginName');
-            Vue.$cookies.remove('PasswordMD5');
-        }
     }
 
 
@@ -118,7 +101,7 @@ export default class UserStore extends VuexModule {
 
     /** 登陆 */
     @Action
-    async Login({ loginname, password, autologin }: Record<string, string | boolean>) {
+    async Login({ loginname, password, }: Record<string, string | boolean>) {
         try {
             const formData = new FormData();
             formData.append('loginname', loginname as string);
@@ -130,9 +113,6 @@ export default class UserStore extends VuexModule {
         catch (error) {
             this.SetUserInfo();
             this.SetToken();
-        }
-        finally {
-            this.SetAutoLogin(autologin as boolean);
         }
     }
 
