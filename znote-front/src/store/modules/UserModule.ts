@@ -85,16 +85,9 @@ export default class UserStore extends VuexModule {
                 this.SetToken(response.data.token);
             }
             catch (error) {
-                this.TryLogin();
+                this.ToLogin();
             }
         }
-    }
-
-    /** 尝试用cookie中的账号密码登陆 */
-    @Action
-    TryLogin(){
-        //
-        this.ToLogin();
     }
 
     /** 退出登录
