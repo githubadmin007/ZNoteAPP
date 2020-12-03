@@ -1,13 +1,18 @@
-import axios from 'axios';
-import { default as VMessageHelper, MessageOptions } from 'vuetify-ex/src/core/components/VMessage/src/VMessageHelper'
+import axios, { AxiosInstance } from 'axios';
+import VMessageHelper from 'vuetify-ex/src/core/components/VMessage/src/VMessageHelper'
 import { UserModule } from "@/store/modules";
+
+declare module "vue/types/vue" {
+    interface Vue {
+        $axios: AxiosInstance;
+    }
+}
 
 // 提示函数
 const tip = (msg: string) => {
-    const opt: MessageOptions = {
+    VMessageHelper({
         message: msg
-    }
-    VMessageHelper(opt);
+    });
 }
 
 // 跳转登录页。携带当前页面路由，以期在登录页面完成登录后返回当前页面

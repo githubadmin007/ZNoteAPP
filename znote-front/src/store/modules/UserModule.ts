@@ -3,7 +3,7 @@ import axios from '../../plugins/axios'
 import store from '@/store'
 import { Md5 } from 'ts-md5'
 import { Module, VuexModule, Mutation, Action, getModule } from 'vuex-module-decorators';
-import { APIModule } from "@/store/modules/APIModule";
+import { APIModule, TabModule } from "@/store/modules";
 import { Location } from 'vue-router'
 
 @Module({
@@ -64,8 +64,7 @@ export default class UserStore extends VuexModule {
         } else {
             try {
                 const response = await axios.get(APIModule.UserInfoAPI);
-                this.SetUserInfo(response.data);
-                this.SetToken(response.data.token);
+                this.LoginStateChange(response.data);
             }
             catch (error) {
                 this.ToLogin();
@@ -78,8 +77,7 @@ export default class UserStore extends VuexModule {
      */
     @Action
     Logout(isRedirect = false) {
-        this.SetToken();
-        this.SetUserInfo();
+        this.LoginStateChange();
         const localtion: Location = {
             path: '/login',
         };
@@ -95,8 +93,6 @@ export default class UserStore extends VuexModule {
     @Action
     ToLogin() {
         this.Logout(true);
-        // store.commit('TabModule/Clear'); // 清空菜单列表等信息
-
     }
 
     /** 登陆 */
@@ -107,25 +103,22 @@ export default class UserStore extends VuexModule {
             formData.append('loginname', loginname as string);
             formData.append('password', Md5.hashStr(password as string).toString());
             const response = await axios.post(APIModule.LoginAPI, formData);
-            this.SetUserInfo(response.data);
-            this.SetToken(response.data.token);
+            this.LoginStateChange(response.data);
         }
         catch (error) {
-            this.SetUserInfo();
-            this.SetToken();
+            this.LoginStateChange();
         }
     }
 
-
-    // @Action // 加载用户信息
-    // async LoadUserInfo() {
-    //     const url = this.context.rootGetters('API/SystemListAPI');
-    //     const response = await axios.get(url);
-    //     const tree = response.data;
-    //     this.context.commit('TabModule/SetMenuTree', tree, { root: true });
-    //     this.context.commit('TabModule/SetHomePage', tree[0], { root: true });
-    //     this.context.commit('TabModule/OpenNewPage', tree[0], { root: true });
-    // }
+    /** 登陆状态改变将触发此函数
+     * @param userInfo 用户信息，为空时代表退出登录
+     */
+    @Action
+    LoginStateChange(userInfo?: Record<string, string>) {
+        this.SetUserInfo(userInfo);
+        this.SetToken(userInfo ? userInfo.token : undefined);
+        TabModule.RefreshMenuTree(); // 更新左侧菜单列表
+    }
 }
 
 export const UserModule = getModule(UserStore);

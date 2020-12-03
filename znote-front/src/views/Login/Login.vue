@@ -23,25 +23,24 @@
                 ></v-text-field>
             </v-form>
             <!-- 登录按钮 -->
-            <v-btn color="primary" :disabled="!valid" block @click="Login"
-                >登录</v-btn
-            >
+            <v-btn color="primary" :disabled="!valid" block @click="Login">
+                登录
+            </v-btn>
         </v-col>
     </v-row>
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import Component from "vue-class-component";
+import { Component, Vue } from "vue-property-decorator";
 import { CreateNotEmptyRule } from "../../assets/script/InputRule";
 import { UserModule } from "@/store/modules";
 
 @Component
-export default class Login2 extends Vue {
+export default class Login extends Vue {
     valid = false;
     form = {
         loginname: "",
-        password: ""
+        password: "",
     };
     rules = {
         loginname: [CreateNotEmptyRule("账号")],

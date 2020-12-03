@@ -1,3 +1,3 @@
 export { APIModule } from './APIModule'
-export { TabModule } from './TabModule'
+export { TabModule, Page } from './TabModule'
 export { UserModule } from './UserModule'

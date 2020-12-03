@@ -21,15 +21,15 @@
             </v-list-item>
             <v-divider></v-divider>
             <!--系统列表-->
-            <!-- <v-list dense nav>
+            <v-list dense nav>
                 <v-list-item
-                    v-for="node in MenuTree"
+                    v-for="node in TabModule.MenuTree"
                     :key="node.name"
-                    @click="menuNodeClick(node)"
+                    @click="TabModule.OpenNewPage(node)"
                 >
                     {{ node.cname }}
                 </v-list-item>
-            </v-list> -->
+            </v-list>
         </v-navigation-drawer>
         <!--头部-->
         <v-app-bar app dense flat dark>
@@ -37,22 +37,9 @@
                 @click="dDrawerOpen = !dDrawerOpen"
                 tile
             ></v-app-bar-nav-icon>
-            <!-- <v-toolbar-title>{{
-                CurrentPage == null ? "" : CurrentPage.cname
-            }}</v-toolbar-title> -->
-            <!-- <v-spacer></v-spacer>
-            <v-menu left bottom>
-                <template v-slot:activator="{ on }">
-                    <v-btn icon tile v-on="on"
-                        ><v-icon>mdi-dots-vertical</v-icon></v-btn
-                    >
-                </template>
-                <v-list>
-                    <v-list-item v-for="n in 5" :key="n" @click="() => {}">
-                        <v-list-item-title>Option {{ n }}</v-list-item-title>
-                    </v-list-item>
-                </v-list>
-            </v-menu> -->
+            <v-toolbar-title>{{
+                TabModule.CurrentPage == null ? "" : TabModule.CurrentPage.cname
+            }}</v-toolbar-title>
         </v-app-bar>
         <!--主体-->
         <v-main app>
@@ -64,14 +51,13 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import Component from "vue-class-component";
-import { mapState, mapGetters, mapMutations } from "vuex";
-import { UserModule } from "@/store/modules";
+import { Component, Vue } from "vue-property-decorator";
+import { TabModule, UserModule, Page } from "@/store/modules";
 
 @Component
 export default class APP extends Vue {
     dDrawerOpen = true;
+    TabModule = TabModule;
     UserModule = UserModule;
 
     mounted() {
