@@ -6,6 +6,7 @@
                 :key="field.FieldBH"
                 v-model="dFormData[field.Name]"
                 v-bind="field"
+                v-bind:ReadOnly="ReadOnly"
             ></MISField>
         </v-form>
         <div class="form-btns">
@@ -35,6 +36,8 @@ import MISField from "./MISField.vue";
 })
 export default class MISForm extends Vue {
     @Prop({ default: "" }) FormCode!: string;
+    @Prop({ default: "" }) InitCode!: string;
+    @Prop({ default: "" }) CtrlCode!: string;
     @Prop({ default: false }) ReadOnly!: boolean;
     @Prop({ default: "" }) KeyName!: string;
     @Prop({ default: "" }) KeyValue!: string;
@@ -44,39 +47,55 @@ export default class MISForm extends Vue {
     dFormData: Record<string, any> = {};
     dFields = [];
 
-    Close() {
-        this.$emit("closewindow");
+    /** 将表单配置信息存进FormData中并返回 */
+    GetFormConfig() {
+        const config = new FormData();
+        config.append("formcode", this.FormCode);
+        config.append("initcode", this.InitCode);
+        config.append("ctrlcode", this.CtrlCode);
+        config.append("readonly", this.ReadOnly ? "true" : "false");
+        config.append("keyname", this.KeyName);
+        config.append("keyvalue", this.KeyValue);
+        return config;
     }
+
+    /** 保存表单 */
     async Save() {
         try {
-            const data = new FormData();
-            data.append("formcode", this.FormCode);
-            data.append("keyname", this.KeyName);
-            data.append("keyvalue", this.KeyValue);
-            data.append("data", JSON.stringify(this.dFormData));
+            const config = this.GetFormConfig();
+            config.append("data", JSON.stringify(this.dFormData));
             const response = await this.$axios.post(
                 APIModule.FormSaveAPI,
-                data
+                config
             );
-            this.$VMessage({ message: "成功" });
+            this.$VMessage({ message: "成功", type: "success" });
+            this.Close();
         } catch (e) {
             console.log(e);
         }
     }
+    /** 关闭表单 */
+    Close() {
+        this.$emit("closewindow");
+    }
+    /** 刷新表单 */
     async Refresh() {
         try {
-            const url = `${APIModule.FormGetFieldsAPI}?formcode=${this.FormCode}&keyname=${this.KeyName}&keyvalue=${this.KeyValue}`;
-            const response = await this.$axios.get(url);
+            const config = this.GetFormConfig();
+            const response = await this.$axios.post(
+                APIModule.FormGetFieldsAPI,
+                config
+            );
             this.dFields = response.data;
-            const data: Record<string, any> = {};
+            const dFormData: Record<string, any> = {};
             this.dFields.forEach((field: any) => {
                 // 默认值
                 if (this.DefaultValue && this.DefaultValue[field.Name]) {
                     field.Value = this.DefaultValue[field.Name];
                 }
-                data[field.Name] = field.Value;
+                dFormData[field.Name] = field.Value;
             });
-            this.dFormData = data;
+            this.dFormData = dFormData;
         } catch (e) {
             console.log(e);
         }

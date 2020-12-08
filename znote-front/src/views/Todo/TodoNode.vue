@@ -23,26 +23,27 @@
                     }"
                 >
                     <v-list-item-content>
-                        <v-list-item-title>{{ todo.name }}</v-list-item-title>
+                        <v-list-item-title>{{ value.name }}</v-list-item-title>
                         <v-list-item-subtitle>{{
-                            todo.type
+                            value.type
                         }}</v-list-item-subtitle>
                         <v-list-item-subtitle>{{
                             cStateStr
                         }}</v-list-item-subtitle>
                     </v-list-item-content>
-                    <v-list-item-icon v-if="todo.sub_num > 0">
+                    <v-list-item-icon v-if="value.sub_num > 0">
                         <v-icon>{{ cArrowIcon }}</v-icon>
                     </v-list-item-icon>
                 </v-list-item>
             </v-progress-linear>
             <!-- 子列表 -->
             <div class="sub-list" v-if="dSubListLoaded">
-                <todo-list-sub
+                <todo-list
                     ref="sublist"
                     v-show="dSubListOpen"
-                    :parentbh="todo.todobh"
-                ></todo-list-sub>
+                    :parentbh="value.todobh"
+                    @refresh="Refresh"
+                ></todo-list>
             </div>
         </v-sheet>
     </div>
@@ -51,17 +52,17 @@
 <script lang="ts">
 // import Vue from 'vue'
 import { Component, Prop, Vue } from "vue-property-decorator";
-import { Todo } from "./todo";
-
+import { Todo } from "./Todo";
 import MISForm from "../../components/MIS/Form/src/MISForm.vue";
+import { APIModule } from "../../store/modules";
 
 @Component({
     components: {
-        "todo-list-sub": () => import("./TodoListSub.vue"),
+        "todo-list": () => import("./TodoList.vue"),
     },
 })
 export default class TodoNode extends Vue {
-    @Prop() todo!: Todo;
+    @Prop() value!: Todo;
 
     dSubListLoaded = false; // 子列表是否已加载
     dSubListOpen = false; // 子列表是否打开
@@ -128,14 +129,14 @@ export default class TodoNode extends Vue {
 
     /** 是否根节点 */
     get cIsRoot() {
-        return this.todo.parentbh === "";
+        return this.value.parentbh === "";
     }
     /** 根据剩余天数获取颜色 */
     get cColor() {
-        if (this.todo.state === "完成") {
+        if (this.value.state === "完成") {
             return "grey";
         }
-        const date = Math.floor(this.todo.residue_hour / 24);
+        const date = Math.floor(this.value.residue_hour / 24);
         if (date < 0) {
             return "grey";
         } else if (date < 1) {
@@ -152,18 +153,18 @@ export default class TodoNode extends Vue {
     }
     /** 获取状态文字 */
     get cStateStr() {
-        if (this.todo.state === "完成") {
+        if (this.value.state === "完成") {
             return "已完成";
         }
-        const deadline = new Date(this.todo.deadline);
+        const deadline = new Date(this.value.deadline);
         let state = "";
-        if (this.todo.residue_hour < 0) {
+        if (this.value.residue_hour < 0) {
             state = "已过期";
-        } else if (this.todo.residue_hour > 1000000) {
+        } else if (this.value.residue_hour > 1000000) {
             return "未限时";
         } else {
-            const date = parseInt((this.todo.residue_hour / 24).toString());
-            const hour = this.todo.residue_hour % 24;
+            const date = parseInt((this.value.residue_hour / 24).toString());
+            const hour = this.value.residue_hour % 24;
             state = "剩余" + date + "天" + hour + "小时";
         }
         return (
@@ -177,11 +178,11 @@ export default class TodoNode extends Vue {
     }
     /** 进度 */
     get cProgress() {
-        if (this.todo.state === "完成") {
+        if (this.value.state === "完成") {
             return 100;
         } else {
-            if (this.todo.sub_num > 0) {
-                return (100 * this.todo.sub_finish_num) / this.todo.sub_num;
+            if (this.value.sub_num > 0) {
+                return (100 * this.value.sub_finish_num) / this.value.sub_num;
             }
             return 0;
         }
@@ -195,47 +196,93 @@ export default class TodoNode extends Vue {
     /** 查看 */
     Read() {
         this.$VWindow({
-            id: 'ToDoInfo',
+            id: "ToDoInfo",
             moveAble: true,
             component: MISForm,
             componentProps: {
                 FormCode: "Form20200606121830",
+                InitCode: "Init20201204103005",
+                CtrlCode: "Ctrl20201202145130",
+                ReadOnly: true,
                 KeyName: "todobh",
-                KeyValue: this.todo.todobh,
+                KeyValue: this.value.todobh,
             },
         });
     }
     /** 编辑 */
     Edit() {
-        console.log(this.todo.todobh);
-    }
-    /** 刷新 */
-    Refresh() {
-        console.log("Refresh");
-    }
-    /** 今日完成 */
-    FinishToday() {
-        console.log("FinishToday");
-    }
-    /** 完成 */
-    Finish() {
-        console.log("Finish");
-    }
-    /** 放弃 */
-    Abandon() {
-        console.log("Abandon");
-    }
-    /** 创建子任务 */
-    CreateSubTodo() {
-        const DefaultValue = {
-            parentbh: this.todo.todobh,
-        };
         this.$VWindow({
-            id: 'ToDoInfo',
+            id: "ToDoInfo",
             moveAble: true,
             component: MISForm,
             componentProps: {
                 FormCode: "Form20200606121830",
+                InitCode: "Init20201204103005",
+                CtrlCode: "Ctrl20201202145130",
+                KeyName: "todobh",
+                KeyValue: this.value.todobh,
+            },
+        });
+    }
+    /** 刷新 */
+    Refresh() {
+        this.$emit("refresh");
+    }
+    /** 今日完成 */
+    async FinishToday() {
+        try {
+            const formData = new FormData();
+            formData.append("todobh", this.value.todobh);
+            const response = await this.$axios.post(
+                APIModule.TodoFinishTodayAPI,
+                formData
+            );
+            this.$VMessage({ message: "成功设为今日完成", type: "success" });
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    /** 完成 */
+    async Finish() {
+        try {
+            const formData = new FormData();
+            formData.append("todobh", this.value.todobh);
+            const response = await this.$axios.post(
+                APIModule.TodoFinishAPI,
+                formData
+            );
+            this.$VMessage({ message: "已完成任务", type: "success" });
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    /** 放弃 */
+    async Abandon() {
+        try {
+            const formData = new FormData();
+            formData.append("todobh", this.value.todobh);
+            const response = await this.$axios.post(
+                APIModule.TodoAbandonAPI,
+                formData
+            );
+            this.$VMessage({ message: "已放弃任务", type: "info" });
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    /** 创建子任务 */
+    CreateSubTodo() {
+        const DefaultValue = {
+            parentbh: this.value.todobh,
+        };
+        this.$VWindow({
+            id: "ToDoInfo",
+            moveAble: true,
+            component: MISForm,
+            componentProps: {
+                FormCode: "Form20200606121830",
+                InitCode: "Init20201204103005",
+                CtrlCode: "Ctrl20201202145130",
                 DefaultValue,
             },
         });

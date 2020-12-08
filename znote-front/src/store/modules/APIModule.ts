@@ -31,7 +31,7 @@ export default class APIStore extends VuexModule {
         return this.APIBaseUrl + '/form/GetFields';
     }
     /** 保存表单数据 */
-    get FormSaveAPI(){
+    get FormSaveAPI() {
         return this.APIBaseUrl + '/form/Save';
     }
     // /** 获取表单字段 */
@@ -45,8 +45,20 @@ export default class APIStore extends VuexModule {
 
     // Todo
     /** 获取待办事项 */
-    get TodoGetList() {
+    get TodoGetListAPI() {
         return this.APIBaseUrl + '/Todo/GetList';
+    }
+    /** 放弃待办事项 */
+    get TodoAbandonAPI() {
+        return this.APIBaseUrl + '/Todo/Abandon';
+    }
+    /** 完成待办事项 */
+    get TodoFinishAPI() {
+        return this.APIBaseUrl + '/Todo/Finish';
+    }
+    /** 设为今日完成 */
+    get TodoFinishTodayAPI() {
+        return this.APIBaseUrl + '/Todo/FinishToday';
     }
 }
 

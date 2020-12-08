@@ -1,5 +1,5 @@
 <template>
-    <div class="mis-field">
+    <div class="mis-field" v-if="cShowField">
         <div class="field-label" :style="cLabelStyle">
             {{ CName }}
         </div>
@@ -11,6 +11,7 @@
                 :value="value"
                 :rules="dRules"
                 :items="dItems"
+                :readonly="cReadOnly"
                 @input="Input"
             ></component>
         </div>
@@ -29,11 +30,21 @@ export default class MISField extends Vue {
     @Prop({ default: "" }) Name!: string;
     @Prop({ default: "" }) CName!: string;
     @Prop({ default: "text" }) Type!: string;
+    @Prop({ default: "编辑" }) AccessType!: string;
     @Prop({ default: "150px" }) LabelWidth!: string;
+    @Prop({ default: false }) ReadOnly!: boolean;
 
     dRules = [];
     dItems = [];
 
+    /** 是否隐藏 */
+    get cShowField() {
+        return this.AccessType != "隐藏";
+    }
+    /** 是否只读 */
+    get cReadOnly() {
+        return this.ReadOnly || this.AccessType == "只读";
+    }
     /** 组件名称 */
     get cComponentName() {
         switch (this.Type) {

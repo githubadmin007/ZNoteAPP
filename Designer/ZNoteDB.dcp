@@ -7,4 +7,4 @@ Driver=com.mysql.jdbc.Driver
 JarFiles=mysql-connector-java-3.1.x-bin.jar
 LogId=root
 TrimSpaces=0
-URL=jdbc:mysql://120.77.35.228:7046/ZNoteDB
+URL=jdbc:mysql://120.77.35.228:7046/znotedb
