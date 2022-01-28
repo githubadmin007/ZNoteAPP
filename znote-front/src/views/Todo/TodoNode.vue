@@ -42,7 +42,7 @@
                     ref="sublist"
                     v-show="dSubListOpen"
                     :parentbh="value.todobh"
-                    @refresh="Refresh"
+                    @update="Update(false)"
                 ></todo-list>
             </div>
         </v-sheet>
@@ -190,8 +190,10 @@ export default class TodoNode extends Vue {
 
     /** 节点点击事件 */
     ClickNode() {
-        this.dSubListLoaded = true;
-        this.dSubListOpen = !this.dSubListOpen;
+        if (this.value.sub_num > 0) {
+            this.dSubListLoaded = true;
+            this.dSubListOpen = !this.dSubListOpen;
+        }
     }
     /** 查看 */
     Read() {
@@ -222,53 +224,12 @@ export default class TodoNode extends Vue {
                 KeyName: "todobh",
                 KeyValue: this.value.todobh,
             },
+            afterClose: (data: boolean) => {
+                if (data) {
+                    this.Update(true);
+                }
+            },
         });
-    }
-    /** 刷新 */
-    Refresh() {
-        this.$emit("refresh");
-    }
-    /** 今日完成 */
-    async FinishToday() {
-        try {
-            const formData = new FormData();
-            formData.append("todobh", this.value.todobh);
-            const response = await this.$axios.post(
-                APIModule.TodoFinishTodayAPI,
-                formData
-            );
-            this.$VMessage({ message: "成功设为今日完成", type: "success" });
-        } catch (e) {
-            console.log(e);
-        }
-    }
-    /** 完成 */
-    async Finish() {
-        try {
-            const formData = new FormData();
-            formData.append("todobh", this.value.todobh);
-            const response = await this.$axios.post(
-                APIModule.TodoFinishAPI,
-                formData
-            );
-            this.$VMessage({ message: "已完成任务", type: "success" });
-        } catch (e) {
-            console.log(e);
-        }
-    }
-    /** 放弃 */
-    async Abandon() {
-        try {
-            const formData = new FormData();
-            formData.append("todobh", this.value.todobh);
-            const response = await this.$axios.post(
-                APIModule.TodoAbandonAPI,
-                formData
-            );
-            this.$VMessage({ message: "已放弃任务", type: "info" });
-        } catch (e) {
-            console.log(e);
-        }
     }
     /** 创建子任务 */
     CreateSubTodo() {
@@ -285,7 +246,80 @@ export default class TodoNode extends Vue {
                 CtrlCode: "Ctrl20201202145130",
                 DefaultValue,
             },
+            afterClose: (data: boolean) => {
+                if (data) {
+                    this.Refresh();
+                }
+            },
         });
+    }
+    /** 今日完成 */
+    async FinishToday() {
+        try {
+            const formData = new FormData();
+            formData.append("todobh", this.value.todobh);
+            const response = await this.$axios.post(
+                APIModule.TodoFinishTodayAPI,
+                formData
+            );
+            this.$VMessage.success("成功设为今日完成");
+            this.Update(true);
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    /** 完成 */
+    async Finish() {
+        try {
+            const formData = new FormData();
+            formData.append("todobh", this.value.todobh);
+            const response = await this.$axios.post(
+                APIModule.TodoFinishAPI,
+                formData
+            );
+            this.$VMessage.success("已完成任务");
+            this.Update(true);
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    /** 放弃 */
+    async Abandon() {
+        try {
+            const formData = new FormData();
+            formData.append("todobh", this.value.todobh);
+            const response = await this.$axios.post(
+                APIModule.TodoAbandonAPI,
+                formData
+            );
+            this.$VMessage.info("已放弃任务");
+            this.Update(true);
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    /** 刷新 */
+    async Refresh() {
+        const formData = new FormData();
+        formData.append("todobh", this.value.todobh);
+        const response = await this.$axios.post(
+            APIModule.TodoGetInfo,
+            formData
+        );
+        this.$emit("input", response.data);
+        this.dSubListLoaded = false;
+        await this.$nextTick();
+        if (this.dSubListOpen) {
+            this.dSubListLoaded = true;
+        }
+    }
+    /** 更新任务信息 */
+    Update(emit: boolean) {
+        if (emit) {
+            this.$emit("update");
+        } else {
+            this.Refresh();
+        }
     }
 }
 </script>

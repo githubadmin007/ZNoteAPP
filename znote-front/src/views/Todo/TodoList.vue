@@ -1,5 +1,8 @@
 <template>
     <v-row class="todo-list" dense>
+        <v-col v-if="dLoading" cols="12" class="loading">
+            <v-progress-circular indeterminate size="20"></v-progress-circular>
+        </v-col>
         <v-col
             v-for="(todo, index) in TodoList"
             :key="todo.todobh"
@@ -9,7 +12,7 @@
             :xl="cIsRoot ? 3 : 12"
         >
             <!-- @update="update" -->
-            <todo-node v-model="TodoList[index]" @refresh="Refresh"></todo-node>
+            <todo-node v-model="TodoList[index]" @update="Update"></todo-node>
         </v-col>
     </v-row>
 </template>
@@ -28,6 +31,7 @@ import TodoNode from "./TodoNode.vue";
 export default class TodoList extends Vue {
     @Prop({ default: "" }) protected parentbh!: string; // 父任务编号
 
+    dLoading = false;
     TodoList: Array<Todo> = [];
 
     /** 是否根列表 */
@@ -38,6 +42,8 @@ export default class TodoList extends Vue {
     /** 刷新列表 */
     async RefreshList() {
         try {
+            this.TodoList = [];
+            this.dLoading = true;
             const formData = new FormData();
             formData.append("parentbh", this.parentbh);
             formData.append("state", this.cIsRoot ? "进行中" : "进行中,完成");
@@ -46,6 +52,7 @@ export default class TodoList extends Vue {
                 formData
             );
             this.TodoList = response.data;
+            this.dLoading = false;
             // this.Sort();
             // this.$emit("update");
         } catch {
@@ -53,8 +60,8 @@ export default class TodoList extends Vue {
         }
     }
 
-    Refresh() {
-        this.$emit("refresh");
+    Update() {
+        this.$emit("update");
     }
 
     created() {
@@ -62,3 +69,13 @@ export default class TodoList extends Vue {
     }
 }
 </script>
+
+<style lang="scss" scoped>
+.todo-list {
+    position: relative;
+    .loading {
+        height: 30px;
+        text-align: center;
+    }
+}
+</style>

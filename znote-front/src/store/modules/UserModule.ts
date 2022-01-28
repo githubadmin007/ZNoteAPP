@@ -97,11 +97,11 @@ export default class UserStore extends VuexModule {
 
     /** 登陆 */
     @Action
-    async Login({ loginname, password, }: Record<string, string | boolean>) {
+    async Login({ loginname, password, }: Record<string, string>) {
         try {
             const formData = new FormData();
-            formData.append('loginname', loginname as string);
-            formData.append('password', Md5.hashStr(password as string).toString());
+            formData.append('loginname', loginname);
+            formData.append('password', Md5.hashStr(password).toString());
             const response = await axios.post(APIModule.LoginAPI, formData);
             this.LoginStateChange(response.data);
         }

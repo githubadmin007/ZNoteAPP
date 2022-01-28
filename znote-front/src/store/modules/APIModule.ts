@@ -12,6 +12,10 @@ export default class APIStore extends VuexModule {
     get LoginAPI(): string {
         return this.APIBaseUrl + '/User/Login';
     }
+    /** 检查密码是否正确 */
+    get CheckPasswordAPI(): string {
+        return this.APIBaseUrl + '/User/CheckPassword';
+    }
     /** 获取用户信息 */
     get UserInfoAPI(): string {
         return this.APIBaseUrl + '/User/GetUserInfo';
@@ -59,6 +63,16 @@ export default class APIStore extends VuexModule {
     /** 设为今日完成 */
     get TodoFinishTodayAPI() {
         return this.APIBaseUrl + '/Todo/FinishToday';
+    }
+    /** 获取待办信息 */
+    get TodoGetInfo() {
+        return this.APIBaseUrl + '/Todo/GetInfo';
+    }
+
+    // 翻译
+    /** 百度翻译 */
+    get TranslateBaidu() {
+        return this.APIBaseUrl + '/Proxy/Translate';
     }
 }
 

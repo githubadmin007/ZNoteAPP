@@ -1,5 +1,8 @@
 <template>
     <div class="mis-form">
+        <v-overlay :value="dLoading" absolute>
+            <v-progress-circular indeterminate size="64"></v-progress-circular>
+        </v-overlay>
         <v-form v-model="dValid">
             <MISField
                 v-for="field in dFields"
@@ -43,6 +46,7 @@ export default class MISForm extends Vue {
     @Prop({ default: "" }) KeyValue!: string;
     @Prop() DefaultValue!: Record<string, any>;
 
+    dLoading = false;
     dValid = false;
     dFormData: Record<string, any> = {};
     dFields = [];
@@ -53,7 +57,7 @@ export default class MISForm extends Vue {
         config.append("formcode", this.FormCode);
         config.append("initcode", this.InitCode);
         config.append("ctrlcode", this.CtrlCode);
-        config.append("readonly", this.ReadOnly ? "true" : "false");
+        config.append("readonly", this.ReadOnly.toString());
         config.append("keyname", this.KeyName);
         config.append("keyvalue", this.KeyValue);
         return config;
@@ -62,14 +66,16 @@ export default class MISForm extends Vue {
     /** 保存表单 */
     async Save() {
         try {
+            this.dLoading = true;
             const config = this.GetFormConfig();
             config.append("data", JSON.stringify(this.dFormData));
             const response = await this.$axios.post(
                 APIModule.FormSaveAPI,
                 config
             );
-            this.$VMessage({ message: "成功", type: "success" });
-            this.Close();
+            this.$VMessage.success("成功");
+            this.dLoading = false;
+            this.$emit("closewindow", true);
         } catch (e) {
             console.log(e);
         }
@@ -81,6 +87,7 @@ export default class MISForm extends Vue {
     /** 刷新表单 */
     async Refresh() {
         try {
+            this.dLoading = true;
             const config = this.GetFormConfig();
             const response = await this.$axios.post(
                 APIModule.FormGetFieldsAPI,
@@ -96,6 +103,7 @@ export default class MISForm extends Vue {
                 dFormData[field.Name] = field.Value;
             });
             this.dFormData = dFormData;
+            this.dLoading = false;
         } catch (e) {
             console.log(e);
         }
@@ -109,6 +117,9 @@ export default class MISForm extends Vue {
 
 <style lang="scss" scoped>
 .mis-form {
+    width: 100%;
+    height: 100%;
     padding-top: 10px;
+    position: relative;
 }
 </style>
